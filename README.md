@@ -16,7 +16,7 @@ Part E:  First, define what an aspirational brand means, then do analysis.
 
 ## Assignment Flow
 
-Script 1) Extracting data (not much work)
+Script 1) Extracting data
 
 (Tokenization, stemming/lemmatization, stop words, document representation)
 
