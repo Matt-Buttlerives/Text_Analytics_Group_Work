@@ -13,3 +13,17 @@ If Toyota is more associated with Lexus than Ford, mention Toyota and Lexus are 
 
 Part E:  First, define what an aspirational brand means, then do analysis.
 
+
+## Assignment Flow
+
+Script 1) Extracting data (not much work)
+
+(Tokenization, stemming/lemmatization, stop words, document representation)
+
+Script 2) Find and replace 
+
+Script 3) Frequency (Just count occurrence of words)
+
+Script 4) Calculate lift ( 10 choose 2 since there are 10 brands)
+
+Script 5) Create MDS Map (have inverse matrix, as input to one line of code)
