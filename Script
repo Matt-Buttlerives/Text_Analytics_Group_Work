@@ -142,6 +142,93 @@ df['msg_lemmatized']=df['no_stopwords'].apply(lambda x:lemmatizer(x))
 
 clean_posts = df.msg_lemmatized
 
+##### 6: Frequency Distribution
 
+from nltk.probability import FreqDist
+
+#importing models.csv as models
+models = pd.read_csv(r'models.csv',names=['brand','model'])
+
+#cleaning the brands and models from periods, comas, and dashes
+models['model'] = models['model'].str.lower()
+models['model'] = models['model'].str.replace(" ","")
+models['model'] = models['model'].str.replace(".","")
+models['model'] = models['model'].str.replace(",","")
+models['model'] = models['model'].str.replace(".","")
+models['model'] = models['model'].str.replace("-","")
+models['brand'] = models['brand'].str.replace(".","")
+models['brand'] = models['brand'].str.replace(",","")
+
+#adding brands-models that are not included in models
+models.iloc[-1] = ['hyundai','difhyundairent']
+models.iloc[-1] = ['hyundai','sx']
+models.iloc[-1] = ['bmw','i4']
+models.iloc[-1] = ['buick','verano']
+models.iloc[-1] = ['nissan','malibu']
+models.iloc[-1] = ['nissan','malibus']
+models.iloc[-1] = ['cadenza','kia']
+models.iloc[-1] = ['hyundai','sonataoptima']
+models.iloc[-1] = ['infiniti','infinity']
+models.iloc[-1] = ['sonota','hyundai']
+models.iloc[-1] = ['kia','k5']
+models.iloc[-1] = ['toyota','rav4']
+models.iloc[-1] = ['hyundai','hyudai']
+models.iloc[-1] = ['bmw','i5']
+models.iloc[-1] = ['chevrolet','z24']
+
+#remove unnecessary rows from models
+models = models[models['brand'] != 'hyndai kia']
+models = models[models['brand'] != 'car']
+models = models[models['brand'] != 'sedan']
+models = models[models['brand'] != 'seat']
+models = models[models['brand'] != 'problem']
+
+#generating list of brands
+brand_list = models['brand'].tolist()
+brand_list = list(dict.fromkeys(brand_list))
+
+#generating list of models
+model_list = models['model'].tolist()
+model_list = list(dict.fromkeys(model_list))
+
+#generating check list to delete all tokens not related to brands / models
+check_list = []
+check_list.extend(brand_list)
+check_list.extend(model_list)
+
+#empty list to contain all the words
+words = []
+
+#deleting all tokens not related to 
+for i in range(len(clean_posts)):
+    clean_posts[i] = list(dict.fromkeys(clean_posts[i]))
+    clean_posts[i] = [j for j in clean_posts[i] if j in check_list]
+    for k in range(len(models)):
+        clean_posts[i] = [models.iloc[k,0] if l == models.iloc[k,1] else l for l in clean_posts[i]]
+    words.extend(clean_posts[i])
+ 
+#defining an object for frequency distribution of words   
+fdist = FreqDist(words)
+
+#changing the type of df_fdist from probability.fdist to DataFrame
+brand = pd.DataFrame.from_dict(fdist, orient='index')
+brand.columns = ['Frequency']
+brand.index.name = 'Token'
+brand = brand.reset_index()
+
+#sorting by frequency, descending
+brand = brand.sort_values(by=['Frequency'], ascending=False)
+
+#obtaining the top 10 brands
+top_10_brands = brand.head(10)
+
+#delete rows with empty list
+clean_brand_posts = list(filter(None, clean_posts))
+
+#create a dataframe containing rows of associated brands in a post
+brand_association = pd.DataFrame(clean_brand_posts, columns=['brand 1', 'brand 2', 'brand 3'])
+
+#delete rows without brand association
+brand_association = brand_association[brand_association['brand 2'].notna()]
 
 
