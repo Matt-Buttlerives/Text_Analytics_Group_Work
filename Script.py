@@ -199,14 +199,13 @@ check_list.extend(model_list)
 #empty list to contain all the words
 words = []
 
-#deleting all tokens not related to 
+#deleting all tokens not related to brands/models, finding and replacing models to brands
 for i in range(len(clean_posts)):
-    clean_posts[i] = list(dict.fromkeys(clean_posts[i]))
     clean_posts[i] = [j for j in clean_posts[i] if j in check_list]
     for k in range(len(models)):
         clean_posts[i] = [models.iloc[k,0] if l == models.iloc[k,1] else l for l in clean_posts[i]]
-    words.extend(clean_posts[i])
- 
+    words.extend(list(set(clean_posts[i])))     # Only considering unique brands in each post
+
 #defining an object for frequency distribution of words   
 fdist = FreqDist(words)
 
@@ -222,13 +221,58 @@ brand = brand.sort_values(by=['Frequency'], ascending=False)
 #obtaining the top 10 brands
 top_10_brands = brand.head(10)
 
-#delete rows with empty list
-clean_brand_posts = list(filter(None, clean_posts))
+#deleting brands that are not top 10 and removing repititions in rows
+for i in range(len(clean_posts)):
+    clean_posts[i] = [j for j in clean_posts[i] if j in top_10_brands['Token'].tolist()]
+    clean_posts[i] = list(set(clean_posts[i])) 
 
-#create a dataframe containing rows of associated brands in a post
-brand_association = pd.DataFrame(clean_brand_posts, columns=['brand 1', 'brand 2', 'brand 3'])
+#deleting rows with empty list
+top_brand_posts = list(filter(None, clean_posts))    
 
-#delete rows without brand association
-brand_association = brand_association[brand_association['brand 2'].notna()]
+import itertools
+
+#getting all combinations of pairs
+all_pairs = list(itertools.product(top_10_brands['Token'].tolist(), repeat=2))
+
+#counting the number of cooccurences of each pair
+cooccurence = {pair: len([x for x in top_brand_posts if set(pair) <= set(x)]) for pair in all_pairs}
+brand_association = pd.DataFrame.from_dict(cooccurence, orient='index', columns=['Joint_freq'])
+
+#separating brand 1 and 2 of each pair
+brand_association[['Brand1', 'Brand2']] = pd.DataFrame(brand_association.index.tolist(), index=brand_association.index)
+brand_association.reset_index(drop=True, inplace=True)
+
+#adding frequency of brand 1 and 2
+brand_association=brand_association.merge(top_10_brands,left_on=['Brand1'],right_on=['Token'],how='left').drop(['Token'],axis=1)
+brand_association=brand_association.merge(top_10_brands,left_on=['Brand2'],right_on=['Token'],how='left').drop(['Token'],axis=1)
+
+#creating Lift and Dissimilarity Dataframe
+brand_association['Lift']=len(df)*brand_association['Joint_freq']/(brand_association['Frequency_x']*brand_association['Frequency_y']) 
+brand_association['Dissimilarity'] = 1/brand_association['Lift']
+Lift_df=brand_association[['Brand1', 'Brand2', 'Lift', 'Dissimilarity']]
+
+# reshape from long to wide in pandas python
+Dissimilarity_matrix=brand_association.pivot(index='Brand1', columns='Brand2', values='Dissimilarity')
+
+import numpy as np
+
+#set diagonal values to zero
+Dissimilarity_matrix.values[[np.arange(Dissimilarity_matrix.shape[0])]*2] = 0
 
 
+from sklearn.manifold import MDS
+
+#create multidimentional scaling map
+embedding = MDS(dissimilarity='precomputed', n_components=2, random_state=0)
+MDS_data = embedding.fit_transform(Dissimilarity_matrix)
+
+fig = plt.figure(figsize=(20, 10))
+ax = fig.add_subplot(122)
+colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k', 'b', 'g', 'b']
+plt.scatter(MDS_data[:,0], MDS_data[:,1], c=colors)
+plt.title('MDS Map of Car Brands')
+
+for i, txt in enumerate(Dissimilarity_matrix.index.tolist()):
+    ax.annotate(txt, (MDS_data[i,0], MDS_data[i,1]), fontsize=20)
+
+plt.show()
