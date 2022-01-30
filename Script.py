@@ -261,6 +261,7 @@ Dissimilarity_matrix.values[[np.arange(Dissimilarity_matrix.shape[0])]*2] = 0
 
 
 from sklearn.manifold import MDS
+import matplotlib.pyplot as plt
 
 #create multidimentional scaling map
 embedding = MDS(dissimilarity='precomputed', n_components=2, random_state=0)
