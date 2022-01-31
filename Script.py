@@ -204,7 +204,8 @@ for i in range(len(clean_posts)):
     clean_posts[i] = [j for j in clean_posts[i] if j in check_list]
     for k in range(len(models)):
         clean_posts[i] = [models.iloc[k,0] if l == models.iloc[k,1] else l for l in clean_posts[i]]
-    words.extend(list(set(clean_posts[i])))     # Only considering unique brands in each post
+        clean_posts[i] = list(dict.fromkeys(clean_posts[i]))
+    words.extend(clean_posts[i])     # Only considering unique brands in each post
 
 #defining an object for frequency distribution of words   
 fdist = FreqDist(words)
