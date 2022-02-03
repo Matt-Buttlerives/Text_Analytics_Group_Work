@@ -141,6 +141,7 @@ def lemmatizer(text):
 df['msg_lemmatized']=df['no_stopwords'].apply(lambda x:lemmatizer(x))
 
 clean_posts = df.msg_lemmatized
+keywords = df.msg_lemmatized.copy()
 
 ##### 6: Frequency Distribution
 
@@ -205,8 +206,8 @@ for i in range(len(clean_posts)):
     for k in range(len(models)):
         clean_posts[i] = [models.iloc[k,0] if l == models.iloc[k,1] else l for l in clean_posts[i]]
         clean_posts[i] = list(dict.fromkeys(clean_posts[i]))
-    words.extend(clean_posts[i])     # Only considering unique brands in each post
-
+    words.extend(clean_posts[i])
+ 
 #defining an object for frequency distribution of words   
 fdist = FreqDist(words)
 
@@ -220,24 +221,73 @@ brand = brand.reset_index()
 brand = brand.sort_values(by=['Frequency'], ascending=False)
 
 #obtaining the top 10 brands
-top_10_brands = brand.head(10)
+top_10 = brand.head(10)
 
-#deleting brands that are not top 10 and removing repititions in rows
+#generating list of top 10 brands
+top_10_brands = top_10['Token'].tolist()
+top_10_brands = list(dict.fromkeys(top_10_brands))
+
+#deleting tokens not in the top 10 brands
 for i in range(len(clean_posts)):
-    clean_posts[i] = [j for j in clean_posts[i] if j in top_10_brands['Token'].tolist()]
-    clean_posts[i] = list(set(clean_posts[i])) 
+    clean_posts[i] = [j for j in clean_posts[i] if j in top_10_brands]
 
 #deleting rows with empty list
 top_brand_posts = list(filter(None, clean_posts))    
 
+#creating a dataframe containing rows of associated brands in a post
+brand_association = pd.DataFrame(top_brand_posts, columns=['brand 1',
+                                                           'brand 2',
+                                                           'brand 3',
+                                                           'brand 4',
+                                                           'brand 5',
+                                                           'brand 6',
+                                                           'brand 7',
+                                                           'brand 8',
+                                                           'brand 9',
+                                                           'brand 10'])
+
+#deleting rows without brand association
+brand_association = brand_association[brand_association['brand 2'].notna()]  
+
 import itertools
 
 #getting all combinations of pairs
-all_pairs = list(itertools.product(top_10_brands['Token'].tolist(), repeat=2))
+all_pairs = list(itertools.combinations(top_10_brands, 2))
 
 #counting the number of cooccurences of each pair
 cooccurence = {pair: len([x for x in top_brand_posts if set(pair) <= set(x)]) for pair in all_pairs}
-brand_association = pd.DataFrame.from_dict(cooccurence, orient='index', columns=['Joint_freq'])
+
+#creating an empty dataframe to contain tokens used in conjunction with each brand
+keywords_count = pd.DataFrame(columns=['Token','Word_List'])
+for i in range(len(top_10_brands)):
+    keywords_count = keywords_count.append({'Token':top_10_brands[i],
+                                            'Word_List':[top_10_brands[i],]},
+                                           ignore_index=True)
+
+#creating an empty list to contain tokens used for all cars
+all_tokens = []
+
+#assigning tokens to brands it mentioned together with and creating a list of tokens in every posts
+for i in range(len(keywords)):
+    for j in range(len(top_10_brands)):
+        if top_10_brands[j] in keywords[i]:
+            keywords_count.iloc[j,1] += list(dict.fromkeys(keywords[i]))
+    all_tokens.extend(list(dict.fromkeys(keywords[i])))
+
+#finding the frequency of each token, turning it into a dataframe and exporting it
+all_tokens = [i for i in all_tokens if i not in check_list]
+keyword_all = FreqDist(all_tokens)
+keyword_all = keyword_all.most_common(100)
+df_keyword_all = pd.DataFrame(keyword_all)
+df_keyword_all.to_csv('keyword_all.csv', index=False)
+       
+#finding the frequency of each token mentioned along each brand, turning it into a dataframe and exporting it     
+for i in range(len(top_10_brands)):
+    keywords_count.iloc[i,1] = [k for k in keywords_count.iloc[i,1] if k not in check_list]
+    globals()['keyword_'+top_10_brands[i]] = FreqDist(keywords_count.iloc[i,1])
+    globals()['keyword_'+top_10_brands[i]]  = globals()['keyword_'+top_10_brands[i]].most_common(25)
+    globals()['df_keyword_'+top_10_brands[i]] = pd.DataFrame(globals()['keyword_'+top_10_brands[i]])
+    globals()['df_keyword_'+top_10_brands[i]].to_csv('keyword_'+top_10_brands[i]+'.csv', index=False)
 
 #separating brand 1 and 2 of each pair
 brand_association[['Brand1', 'Brand2']] = pd.DataFrame(brand_association.index.tolist(), index=brand_association.index)
@@ -259,7 +309,6 @@ import numpy as np
 
 #set diagonal values to zero
 Dissimilarity_matrix.values[[np.arange(Dissimilarity_matrix.shape[0])]*2] = 0
-
 
 from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
