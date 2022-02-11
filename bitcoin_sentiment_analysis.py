@@ -1,6 +1,7 @@
 ###### Import Modules
 #import snscrape.modules.twitter as sntwitter
 import pandas as pd
+import numpy as np
 #import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
@@ -12,6 +13,10 @@ from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB, ComplementNB, GaussianNB, BernoulliNB
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 #################################################################
 ###### Read Data and Preprocessing
@@ -25,7 +30,7 @@ df_surge_usa = pd.read_csv('tweets_keyword_bitcoin_surge_usa.csv')
 df_surge_usa['Event'] = 'surge'
 df_surge_usa['Country'] = 'US'
 
-
+2
 
 df_crash_canada = pd.read_csv('tweets_keyword_bitcoin_crash_canada.csv')
 df_crash_canada['Event'] = 'crash'
@@ -36,9 +41,9 @@ df_crash_usa = pd.read_csv('tweets_keyword_bitcoin_crash_usa.csv')
 df_crash_usa['Event'] = 'crash'
 df_crash_usa['Country'] = 'US'
 
-
 df = pd.concat([df_surge_canada, df_surge_usa, df_crash_canada, df_crash_usa])
 df = df[['Country','Event','Text','Datetime']]
+
 #################################################################
 ###### Sentiment Analysis
 
@@ -60,7 +65,6 @@ df['overall_sentiment'] = overall_sent
 
 df.to_csv("bitcoin_sentiment.csv",index=False) # Export to a csv file
 
-
 ###################################################################
 ###### Topic Modeling
 
@@ -81,7 +85,6 @@ def tokenize_text(version_desc):
 
 vec_words = CountVectorizer(tokenizer=tokenize_text,stop_words=stopwords_nltk,decode_error='ignore')
 total_features_words = vec_words.fit_transform(df['Text'])
-
 print(total_features_words.shape)
 
 model = lda.LDA(n_topics=int(ntopics), n_iter=500, random_state=1)
@@ -104,3 +107,53 @@ topics1=topics.transpose()
 topics1.to_excel("topic_word_dist.xlsx")
 bitcoin.to_excel("bitcoin_topic_dist.xlsx",index=False)
 
+#################################################################
+###### Text Classification
+
+df = pd.read_csv("bitcoin_sentiment.csv")
+
+tfvec = TfidfVectorizer(tokenizer=tokenize_text,stop_words=stopwords_nltk,decode_error='ignore')
+tf_vectors = tfvec.fit_transform(df['Text'])
+
+X_train, X_test, y_train, y_test = train_test_split(tf_vectors,
+                                                    df['overall_sentiment'],
+                                                    test_size=0.25,
+                                                    random_state=0)
+
+y_train = np.asarray(y_train, dtype="|S6")
+y_test = np.asarray(y_test, dtype="|S6")
+
+## Trying different Naive Bayesian Classifiers
+
+# MultinomialNB
+
+MNB = MultinomialNB()
+MNB.fit(X_train, y_train)
+
+accuracy_MNB = accuracy_score(MNB.predict(X_test), y_test)
+print('Accuracy score MNB: '+str('{:04.2f}'.format(accuracy_MNB*100))+'%')
+
+# ComplementNB
+
+CNB = ComplementNB()
+CNB.fit(X_train, y_train)
+
+accuracy_CNB = accuracy_score(CNB.predict(X_test), y_test)
+print(str('Accuracy score CNB: '+'{:04.2f}'.format(accuracy_CNB*100))+'%')
+
+# GaussianNB
+# Note: This chunk of code takes significant amount of time to run
+
+#GNB = GaussianNB()
+#GNB.fit(X_train.todense(), y_train)
+
+#accuracy_GNB = accuracy_score(GNB.predict(X_test), y_test)
+#print(str('Accuracy score GNB: '+'{:04.2f}'.format(accuracy_GNB*100))+'%')
+
+# BernoulliNB
+
+BNB = BernoulliNB()
+BNB.fit(X_train, y_train)
+
+accuracy_BNB = accuracy_score(BNB.predict(X_test), y_test)
+print(str('Accuracy score BNB: '+'{:04.2f}'.format(accuracy_BNB*100))+'%')
