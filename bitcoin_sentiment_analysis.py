@@ -2,6 +2,7 @@
 
 import snscrape.modules.twitter as sntwitter
 import pandas as pd
+import numpy as np
 
 
 #########
@@ -222,7 +223,6 @@ print("Scraped data have been exported to the csv file")
 ###### Import Modules
 import snscrape.modules.twitter as sntwitter
 import pandas as pd
-import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
 nltk.download('vader_lexicon')
@@ -253,6 +253,7 @@ df_crash_usa['Country'] = 'US'
 
 df = pd.concat([df_surge_canada, df_surge_usa, df_crash_canada, df_crash_usa])
 df = df[['Country','Event','Text','Datetime']]
+
 #################################################################
 ###### Sentiment Analysis
 
@@ -276,52 +277,9 @@ df.to_csv("bitcoin_sentiment.csv",index=False) # Export to a csv file
 
 
 ###################################################################
-
-
-###################################################################
-###### Topic Modeling
-
-df = pd.read_csv("bitcoin_sentiment.csv")
-
-df = df.dropna()
-ntopics = input('Provide the number of latent topics to be estimated: ')
-
-word_tokenizer = RegexpTokenizer(r'\w+')
-wordnet_lemmatizer = WordNetLemmatizer()
-stopwords_nltk=set(stopwords.words('english'))
-temp = df['Text']
-def tokenize_text(version_desc):
-    lowercase=version_desc.lower()
-    text = wordnet_lemmatizer.lemmatize(lowercase)
-    tokens = word_tokenizer.tokenize(text)
-    return tokens
-
-vec_words = CountVectorizer(tokenizer=tokenize_text,stop_words=stopwords_nltk,decode_error='ignore')
-total_features_words = vec_words.fit_transform(df['Text'])
-print(total_features_words.shape)
-
-model = lda.LDA(n_topics=int(ntopics), n_iter=500, random_state=1)
-model.fit(total_features_words)
-
-topic_word = model.topic_word_
-doc_topic=model.doc_topic_
-doc_topic=pd.DataFrame(doc_topic)
-df=df.join(doc_topic)
-bitcoin=pd.DataFrame()
-
-for i in range(int(ntopics)):
-    topic="topic_"+str(i)
-    bitcoin[topic]=df.groupby(['Country','Event'])[i].mean()
-
-bitcoin=bitcoin.reset_index()
-topics=pd.DataFrame(topic_word)
-topics.columns=vec_words.get_feature_names()
-topics1=topics.transpose()
-topics1.to_excel("topic_word_dist.xlsx")
-bitcoin.to_excel("bitcoin_topic_dist.xlsx",index=False)
-
-#################################################################
 ###### Text Classification
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 df = pd.read_csv("bitcoin_sentiment.csv")
 df['sentiment'] = np.nan
