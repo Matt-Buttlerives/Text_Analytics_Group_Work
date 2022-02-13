@@ -111,12 +111,21 @@ bitcoin.to_excel("bitcoin_topic_dist.xlsx",index=False)
 ###### Text Classification
 
 df = pd.read_csv("bitcoin_sentiment.csv")
+df['sentiment'] = np.nan
+
+for i in range(len(df['overall_sentiment'])):
+    if df['overall_sentiment'][i] > 0:
+        df['sentiment'][i] = 'Positive'
+    if df['overall_sentiment'][i] < 0:
+        df['sentiment'][i] = 'Negative'
+    if df['overall_sentiment'][i] == 0:
+        df['sentiment'][i] = 'Neutral'
 
 tfvec = TfidfVectorizer(tokenizer=tokenize_text,stop_words=stopwords_nltk,decode_error='ignore')
 tf_vectors = tfvec.fit_transform(df['Text'])
 
 X_train, X_test, y_train, y_test = train_test_split(tf_vectors,
-                                                    df['overall_sentiment'],
+                                                    df['sentiment'],
                                                     test_size=0.25,
                                                     random_state=0)
 
@@ -157,3 +166,15 @@ BNB.fit(X_train, y_train)
 
 accuracy_BNB = accuracy_score(BNB.predict(X_test), y_test)
 print(str('Accuracy score BNB: '+'{:04.2f}'.format(accuracy_BNB*100))+'%')
+
+# Predicting a word with 'Positive' outcome
+BNB.predict(tfvec.transform(['#bitcoin is the awesome!']))
+
+# Predicting a word with 'Neutral' outcome
+BNB.predict(tfvec.transform(['#bitcoin price is going up @ElonMusk']))
+
+# Predicting a word 'Negative' outcome
+# Note: I used a tweet example from the dataset. 
+# The proportion of negative tweets are very small compared to the neutral and positive ones, 
+# so the model tend to classify the words into one of those
+BNB.predict(tfvec.transform(['#Bitcoin #SHIB #Ethereum IM NOT ALLOWED TO POST THIS VIDEO ANYMORE BUT I CAN QUOTE THIS TWEET LMAOOO 🤣🤣🤣YALL CANT STOP ME!!! THE ELITES WONT WIN, WE CAN WIN WE JUST NEED EVERYONE TO WAKE THE FUCK UP TO THEIR PLANS!!! BITCOIN IS THE ULTIMATE PRISON WE CANNOT ADOPT IT!!! #69 https://t.co/txzOXEWNuo']))
