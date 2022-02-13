@@ -1,49 +1,37 @@
 ###### Import Modules
-#import snscrape.modules.twitter as sntwitter
+import snscrape.modules.twitter as sntwitter
 import pandas as pd
-import numpy as np
-#import itertools
+import itertools
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
 nltk.download('vader_lexicon')
-nltk.download('stopwords')
-nltk.download('wordnet')
-import lda
-from nltk.tokenize import RegexpTokenizer
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB, ComplementNB, GaussianNB, BernoulliNB
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 
 #################################################################
 ###### Read Data and Preprocessing
 
-df_surge_canada = pd.read_csv('tweets_keyword_bitcoin_surge_canada.csv')
+df_surge_canada = pd.read_csv(r'C:\Users\Asus\Desktop\Text Analytics\Group Project\Scrapped Data\Toronto Los Angeles\tweets_keyword_bitcoin_surge_canada.csv')
 df_surge_canada['Event'] = 'surge'
 df_surge_canada['Country'] = 'Canada'
 
 
-df_surge_usa = pd.read_csv('tweets_keyword_bitcoin_surge_usa.csv')
+df_surge_usa = pd.read_csv(r'C:\Users\Asus\Desktop\Text Analytics\Group Project\Scrapped Data\Toronto Los Angeles\tweets_keyword_bitcoin_surge_usa.csv')
 df_surge_usa['Event'] = 'surge'
 df_surge_usa['Country'] = 'US'
 
-2
 
-df_crash_canada = pd.read_csv('tweets_keyword_bitcoin_crash_canada.csv')
+
+df_crash_canada = pd.read_csv(r'C:\Users\Asus\Desktop\Text Analytics\Group Project\Scrapped Data\Toronto Los Angeles\tweets_keyword_bitcoin_crash_canada.csv')
 df_crash_canada['Event'] = 'crash'
 df_crash_canada['Country'] = 'Canada'
 
 
-df_crash_usa = pd.read_csv('tweets_keyword_bitcoin_crash_usa.csv')
+df_crash_usa = pd.read_csv(r'C:\Users\Asus\Desktop\Text Analytics\Group Project\Scrapped Data\Toronto Los Angeles\tweets_keyword_bitcoin_crash_usa.csv')
 df_crash_usa['Event'] = 'crash'
 df_crash_usa['Country'] = 'US'
 
+
 df = pd.concat([df_surge_canada, df_surge_usa, df_crash_canada, df_crash_usa])
 df = df[['Country','Event','Text','Datetime']]
-
 #################################################################
 ###### Sentiment Analysis
 
@@ -64,6 +52,10 @@ df['overall_sentiment'] = overall_sent
 
 
 df.to_csv("bitcoin_sentiment.csv",index=False) # Export to a csv file
+
+
+###################################################################
+
 
 ###################################################################
 ###### Topic Modeling

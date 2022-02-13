@@ -138,7 +138,7 @@ tweets_list_user = []    # A list used to store the retuned results for user sea
 
 
 #### Scraping tweets from a text search query ####
-command_keyword = key_word+' lang:en near:"Montreal" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
+command_keyword = key_word+' lang:en near:"Toronto" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
 print("Scraping data for keyword:",key_word)
 for i,tweet in enumerate(sntwitter.TwitterSearchScraper(command_keyword).get_items()):
     tweets_list_keyword.append([tweet.date,tweet.id, tweet.content, tweet.user.username, tweet.url]) # Append returned results to list
@@ -160,7 +160,7 @@ tweets_list_user = []    # A list used to store the retuned results for user sea
 
 
 #### Scraping tweets from a text search query ####
-command_keyword = key_word+' lang:en near:"Denver" within:1500km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
+command_keyword = key_word+' lang:en near:"Los Angeles" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
 print("Scraping data for keyword:",key_word)
 for i,tweet in enumerate(sntwitter.TwitterSearchScraper(command_keyword).get_items()):
     tweets_list_keyword.append([tweet.date,tweet.id, tweet.content, tweet.user.username, tweet.url]) # Append returned results to list
@@ -187,7 +187,7 @@ tweets_list_user = []    # A list used to store the retuned results for user sea
 
 
 #### Scraping tweets from a text search query ####
-command_keyword = key_word+' lang:en near:"Montreal" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
+command_keyword = key_word+' lang:en near:"Toronto" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
 print("Scraping data for keyword:",key_word)
 for i,tweet in enumerate(sntwitter.TwitterSearchScraper(command_keyword).get_items()):
     tweets_list_keyword.append([tweet.date,tweet.id, tweet.content, tweet.user.username, tweet.url]) # Append returned results to list
@@ -210,7 +210,7 @@ tweets_list_user = []    # A list used to store the retuned results for user sea
 
 
 #### Scraping tweets from a text search query ####
-command_keyword = key_word+' lang:en near:"Denver" within:1500km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
+command_keyword = key_word+' lang:en near:"Los Angeles" within:1000km'+' since:'+from_date+' until:'+end_date # Define a string command for Scraper Api
 print("Scraping data for keyword:",key_word)
 for i,tweet in enumerate(sntwitter.TwitterSearchScraper(command_keyword).get_items()):
     tweets_list_keyword.append([tweet.date,tweet.id, tweet.content, tweet.user.username, tweet.url]) # Append returned results to list
