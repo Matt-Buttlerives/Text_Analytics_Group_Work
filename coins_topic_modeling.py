@@ -1,7 +1,6 @@
 ###### Import Modules
 import lda
 import pandas as pd
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.probability import FreqDist
@@ -34,38 +33,14 @@ df_shiba['Coin'] = 'Shiba'
 df = pd.concat([df_bitcoin, df_crypto, df_doge, df_ethereum, df_shiba])
 df = df[['Coin','Text','Datetime']]
 df.reset_index(inplace=True)
-#################################################################
-###### Sentiment Analysis
-
-SIA = SentimentIntensityAnalyzer()
-sentiment_list = []
-overall_sent = []
-
-for sentence in df.Text:
-    pol_sc = SIA.polarity_scores(sentence)
-    sentiment_list.append(pol_sc)
-    
-df['Sentiment'] = sentiment_list
-   
-for i in sentiment_list:
-    overall_sent.append(i['compound'])
-
-df['overall_sentiment'] = overall_sent
-
-
-df.to_csv("sentiment_5_coins.csv",index=False) # Export to a csv file
-
 
 ###################################################################
-
-
-###################################################################
-###### Topic Modeling
+###### Data preprocessing
 
 # df = pd.read_csv("sentiment_5_coins.csv")
 
 df = df.dropna()
-ntopics = input('Provide the number of latent topics to be estimated: ')
+ntopics = input('Provide the number of latent topics to be estimated: ')  # get number of topics at the beginning
 
 ############# Text Pre-processing
 
@@ -159,7 +134,10 @@ for i in range(len(clean_posts)):
 #adding clean_posts to df
 df = pd.concat([df, clean_posts.to_frame(name="top_words")], axis=1)
 
-# topic modeling
+
+###################################################################
+###### Topic Modeling
+
 vec_words = CountVectorizer(decode_error='ignore')
 total_features_words = vec_words.fit_transform(df['top_words'])
 print(total_features_words.shape)
@@ -183,58 +161,3 @@ topics.columns=vec_words.get_feature_names()
 topics1=topics.transpose()
 topics1.to_excel("topic_word_dist.xlsx")
 coin.to_excel("coin_topic_dist.xlsx",index=False)
-
-# =============================================================================
-# 
-# #################################################################
-# ###### Text Classification
-# 
-# df = pd.read_csv("sentiment_5_coins.csv")
-# 
-# tfvec = TfidfVectorizer(tokenizer=tokenize_text,stop_words=stopwords_nltk,decode_error='ignore')
-# tf_vectors = tfvec.fit_transform(df['Text'])
-# 
-# X_train, X_test, y_train, y_test = train_test_split(tf_vectors,
-#                                                     df['overall_sentiment'],
-#                                                     test_size=0.25,
-#                                                     random_state=0)
-# 
-# y_train = np.asarray(y_train, dtype="|S6")
-# y_test = np.asarray(y_test, dtype="|S6")
-# 
-# ## Trying different Naive Bayesian Classifiers
-# 
-# # MultinomialNB
-# 
-# MNB = MultinomialNB()
-# MNB.fit(X_train, y_train)
-# 
-# accuracy_MNB = accuracy_score(MNB.predict(X_test), y_test)
-# print('Accuracy score MNB: '+str('{:04.2f}'.format(accuracy_MNB*100))+'%')
-# 
-# # ComplementNB
-# 
-# CNB = ComplementNB()
-# CNB.fit(X_train, y_train)
-# 
-# accuracy_CNB = accuracy_score(CNB.predict(X_test), y_test)
-# print(str('Accuracy score CNB: '+'{:04.2f}'.format(accuracy_CNB*100))+'%')
-# 
-# # GaussianNB
-# # Note: This chunk of code takes significant amount of time to run
-# 
-# #GNB = GaussianNB()
-# #GNB.fit(X_train.todense(), y_train)
-# 
-# #accuracy_GNB = accuracy_score(GNB.predict(X_test), y_test)
-# #print(str('Accuracy score GNB: '+'{:04.2f}'.format(accuracy_GNB*100))+'%')
-# 
-# # BernoulliNB
-# 
-# BNB = BernoulliNB()
-# BNB.fit(X_train, y_train)
-# 
-# accuracy_BNB = accuracy_score(BNB.predict(X_test), y_test)
-# print(str('Accuracy score BNB: '+'{:04.2f}'.format(accuracy_BNB*100))+'%')
-# 
-# =============================================================================
